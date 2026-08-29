@@ -101,6 +101,8 @@ describe("Blinko Mind Map App", () => {
     expect(main).toContain("mainBranchDirectionForDrop");
     expect(main).toContain("DEFAULT_MAIN_BRANCH_DIRECTION");
     expect(main).toContain("newTopicName:");
+    expect(main).toContain("instance.findEle(destinationId)");
+    expect(main).toContain("instance.map.contains(destination)");
     expect(styles).toContain("radial-gradient");
     expect(styles).toContain(".zoom-controls");
     expect(styles).toContain(".canvas-context-menu");

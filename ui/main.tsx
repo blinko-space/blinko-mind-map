@@ -392,9 +392,14 @@ function App() {
       instance.init(data);
       const nativeAddChild = instance.addChild.bind(instance);
       instance.addChild = async (target?: Topic, node?: NodeObj) => {
-        const destination = target ?? instance.currentNode ?? undefined;
-        if (!destination || destination.nodeObj.parent || node) {
-          await nativeAddChild(target, node);
+        // reshapeNode/refresh replaces Mind Elixir's topic elements. currentNode can therefore
+        // briefly point at a detached element after a cross-centre drag or responsive scale-fit.
+        // Resolve every destination by node id against the live map before calling the library.
+        const destinationId = (target ?? instance.currentNode)?.nodeObj.id ?? instance.nodeData.id;
+        const destination = instance.findEle(destinationId) ?? instance.findEle(instance.nodeData.id);
+        if (!destination?.isConnected || !instance.map.contains(destination)) return;
+        if (destination.nodeObj.parent || node) {
+          await nativeAddChild(destination, node);
           return;
         }
         const branch = instance.generateNewObj();
@@ -410,6 +415,7 @@ function App() {
         finally { placeholders.forEach((placeholder) => placeholder.remove()); }
         branch.direction = DEFAULT_MAIN_BRANCH_DIRECTION;
         const created = instance.findEle(branch.id);
+        if (!created?.isConnected || !instance.map.contains(created)) return;
         instance.selectNode(created, true);
         await instance.beginEdit(created);
       };
