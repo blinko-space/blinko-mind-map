@@ -3,6 +3,9 @@ import type { MindElixirData, NodeObj } from "mind-elixir";
 export const MAP_TYPE_KEY = "mind-map.document";
 export const MAX_DOCUMENT_LENGTH = 800_000;
 export const MAX_NODE_TEXT_LENGTH = 200_000;
+export const DEFAULT_MAIN_BRANCH_DIRECTION = 1 as const;
+
+export type MainBranchDirection = 0 | 1;
 
 export type MindMapDocument = {
   title: string;
@@ -69,6 +72,21 @@ export function serializeMindMap(data: MindElixirData): string {
   const serialized = JSON.stringify(cleanMindMap(data));
   if (serialized.length > MAX_DOCUMENT_LENGTH) throw new Error("MAP_TOO_LARGE");
   return serialized;
+}
+
+export function mainBranchDirectionForDrop(pointerX: number, rootCenterX: number): MainBranchDirection {
+  return pointerX < rootCenterX ? 0 : 1;
+}
+
+export function setMainBranchDirection(
+  data: MindElixirData,
+  nodeId: string,
+  direction: MainBranchDirection,
+): boolean {
+  const branch = data.nodeData.children?.find((child) => child.id === nodeId);
+  if (!branch || branch.direction === direction) return false;
+  branch.direction = direction;
+  return true;
 }
 
 export function flattenNodeText(data: MindElixirData): string {

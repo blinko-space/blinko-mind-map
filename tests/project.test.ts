@@ -3,7 +3,17 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseExtensionManifest } from "@blinko-cloud/cli/sdk";
-import { createMindMap, flattenNodeText, outlineToMindMap, parseAiOutline, parseMindMap, serializeMindMap } from "../ui/model";
+import {
+  DEFAULT_MAIN_BRANCH_DIRECTION,
+  createMindMap,
+  flattenNodeText,
+  mainBranchDirectionForDrop,
+  outlineToMindMap,
+  parseAiOutline,
+  parseMindMap,
+  serializeMindMap,
+  setMainBranchDirection,
+} from "../ui/model";
 
 const root = resolve(import.meta.dirname, "..");
 const blinko = resolve(root, "../../packages/cli/dist/blinko.mjs");
@@ -54,6 +64,19 @@ describe("Blinko Mind Map App", () => {
     expect(() => parseAiOutline(JSON.stringify(tooDeep))).toThrow("INVALID_AI_OUTLINE");
   });
 
+  it("defaults new main branches to the right and persists cross-center side changes", () => {
+    expect(DEFAULT_MAIN_BRANCH_DIRECTION).toBe(1);
+    expect(mainBranchDirectionForDrop(199, 200)).toBe(0);
+    expect(mainBranchDirectionForDrop(200, 200)).toBe(1);
+    const map = createMindMap("Direction test");
+    map.nodeData.children = [
+      { id: "main", topic: "Main branch", direction: 0, children: [{ id: "nested", topic: "Nested" }] },
+    ];
+    expect(setMainBranchDirection(map, "nested", 1)).toBe(false);
+    expect(setMainBranchDirection(map, "main", 1)).toBe(true);
+    expect(parseMindMap(serializeMindMap(map)).nodeData.children?.[0]?.direction).toBe(1);
+  });
+
   it("bundles Mind Elixir and the Blinko host bridge without remote executable resources", () => {
     runCli("build");
     const resourceIndex = JSON.parse(readFileSync(resolve(root, "dist/resource-index.json"), "utf8"));
@@ -75,6 +98,8 @@ describe("Blinko Mind Map App", () => {
     expect(main).toContain('addEventListener("contextmenu", contextMenu, true)');
     expect(main).toContain("copyNode");
     expect(main).toContain('addEventListener("pointermove", pointerMove, true)');
+    expect(main).toContain("mainBranchDirectionForDrop");
+    expect(main).toContain("DEFAULT_MAIN_BRANCH_DIRECTION");
     expect(main).toContain("newTopicName:");
     expect(styles).toContain("radial-gradient");
     expect(styles).toContain(".zoom-controls");

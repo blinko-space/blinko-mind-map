@@ -130,6 +130,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .mind-map-canvas > .map-container:active, .mind-map-canvas > .map-container.blinko-panning, .mind-map-canvas me-tpc:active { cursor: grabbing; }
 .mind-map-canvas > .map-container.blinko-panning * { cursor: grabbing !important; }
 .mind-map-canvas me-tpc { cursor: grab; }
+.branch-drop-indicator {
+  position: absolute; top: 14px; left: 50%; z-index: 5; pointer-events: none;
+  padding: 7px 11px; color: var(--mm-primary-text); background: var(--mm-primary);
+  border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.14); font-size: 11px; font-weight: 650;
+}
+.branch-drop-indicator.left { transform: translateX(calc(-100% - 12px)); }
+.branch-drop-indicator.right { transform: translateX(12px); }
 .zoom-controls {
   position: absolute; left: 12px; bottom: 12px; z-index: 4; display: flex; align-items: center; gap: 2px;
   padding: 4px; color: var(--mm-muted); background: color-mix(in srgb, var(--mm-surface) 92%, transparent);

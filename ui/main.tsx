@@ -7,12 +7,15 @@ import "mind-elixir/style.css";
 import "./styles.css";
 import {
   MAP_TYPE_KEY,
+  DEFAULT_MAIN_BRANCH_DIRECTION,
   createMindMap,
   flattenNodeText,
+  mainBranchDirectionForDrop,
   outlineToMindMap,
   parseAiOutline,
   parseMindMap,
   serializeMindMap,
+  setMainBranchDirection,
   type MindMapDocument,
 } from "./model";
 
@@ -55,35 +58,35 @@ const INTERACTION_COPY: Record<string, Copy> = {
   en: {
     zoomIn:"Zoom in", zoomOut:"Zoom out", resetZoom:"Reset zoom", guide:"How to use Blinko Mind Map",
     guideTitle:"Build your map naturally", guideIntro:"Everything saves automatically while you work.",
-    guideNodes:"Double-click a node to edit it. Drag a branch onto another node to reorganize it.",
+    guideNodes:"Double-click a node to edit it. Drag a main branch across the center to switch sides, or onto another node to reorganize it.",
     guideCanvas:"Drag empty canvas space to move around. Scroll to zoom, or use the controls in the lower-left corner.",
     guideKeys:"Select a node and press Tab for a child, Enter for a sibling, or Delete to remove it. The top trash button deletes the whole map.",
     guideDone:"Start mapping", keyboardHint:"Drag canvas · Right-click to add · Scroll to zoom · Tab child · Enter sibling",
     renameMap:"Rename map", renameMapTitle:"Rename this map", mapName:"Map name", saveName:"Save name",
     newBranch:"New main branch", newChild:"Add child to selected node", renameNode:"Rename node", duplicateBranch:"Duplicate branch",
-    canvasMenuHint:"Right-click a node for more editing actions.", newNodeName:"New node",
+    canvasMenuHint:"Right-click a node for more editing actions.", newNodeName:"New node", moveBranchLeft:"Release to move the branch left", moveBranchRight:"Release to move the branch right",
   },
   "zh-CN": {
     zoomIn:"放大", zoomOut:"缩小", resetZoom:"重置缩放", guide:"Blinko 导图使用指引",
     guideTitle:"自然地整理你的想法", guideIntro:"编辑过程中会自动保存，不需要手动操作。",
-    guideNodes:"双击节点可以编辑；把分支拖到另一个节点上，可以重新整理结构。",
+    guideNodes:"双击节点可以编辑；把主分支拖过中心线可切换左右方向，拖到另一个节点上可重新整理结构。",
     guideCanvas:"按住画布空白处拖动即可平移，滚轮可以缩放，也可以使用左下角的缩放控件。",
     guideKeys:"选中节点后，Tab 添加子节点、Enter 添加同级节点、Delete 删除节点。顶部垃圾桶删除整张导图。",
     guideDone:"开始绘制", keyboardHint:"拖动画布 · 右键新建 · 滚轮缩放 · Tab 子节点 · Enter 同级节点",
     renameMap:"重命名导图", renameMapTitle:"重命名这张导图", mapName:"导图名称", saveName:"保存名称",
     newBranch:"新建主分支", newChild:"为选中节点添加子节点", renameNode:"重命名节点", duplicateBranch:"复制分支",
-    canvasMenuHint:"右键点击节点可使用更多编辑操作。", newNodeName:"新节点",
+    canvasMenuHint:"右键点击节点可使用更多编辑操作。", newNodeName:"新节点", moveBranchLeft:"松开移到左侧", moveBranchRight:"松开移到右侧",
   },
   "zh-TW": {
     zoomIn:"放大", zoomOut:"縮小", resetZoom:"重設縮放", guide:"Blinko 導圖使用指引",
     guideTitle:"自然地整理你的想法", guideIntro:"編輯過程會自動儲存，不需要手動操作。",
-    guideNodes:"雙擊節點可以編輯；把分支拖到另一個節點上，可以重新整理結構。",
+    guideNodes:"雙擊節點可以編輯；把主分支拖過中心線可切換左右方向，拖到另一個節點上可重新整理結構。",
     guideCanvas:"按住畫布空白處拖動即可平移，滾輪可以縮放，也可以使用左下角的縮放控制。",
     guideKeys:"選取節點後，Tab 新增子節點、Enter 新增同層節點、Delete 刪除節點。頂部垃圾桶刪除整張導圖。",
     guideDone:"開始繪製", keyboardHint:"拖動畫布 · 右鍵新增 · 滾輪縮放 · Tab 子節點 · Enter 同層節點",
     renameMap:"重新命名導圖", renameMapTitle:"重新命名這張導圖", mapName:"導圖名稱", saveName:"儲存名稱",
     newBranch:"新增主分支", newChild:"為選取節點新增子節點", renameNode:"重新命名節點", duplicateBranch:"複製分支",
-    canvasMenuHint:"右鍵點擊節點可使用更多編輯操作。", newNodeName:"新節點",
+    canvasMenuHint:"右鍵點擊節點可使用更多編輯操作。", newNodeName:"新節點", moveBranchLeft:"放開移到左側", moveBranchRight:"放開移到右側",
   },
 };
 const interactionText = (key: string) => INTERACTION_COPY[locale]?.[key] || INTERACTION_COPY.en![key] || key;
@@ -142,6 +145,7 @@ function App() {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameDraft, setRenameDraft] = useState("");
   const [canvasMenu, setCanvasMenu] = useState<CanvasMenuState>();
+  const [branchDropSide, setBranchDropSide] = useState<"left" | "right">();
   const mapElement = useRef<HTMLDivElement>(null);
   const mind = useRef<MindElixirInstance>();
   const active = useRef<EntityRecord<MindMapDocument>>();
@@ -385,24 +389,81 @@ function App() {
           },
         },
       });
-      instance.init(data); instance.bus.addListener("operation", scheduleSave);
+      instance.init(data);
+      const nativeAddChild = instance.addChild.bind(instance);
+      instance.addChild = async (target?: Topic, node?: NodeObj) => {
+        const destination = target ?? instance.currentNode ?? undefined;
+        if (!destination || destination.nodeObj.parent || node) {
+          await nativeAddChild(target, node);
+          return;
+        }
+        const branch = instance.generateNewObj();
+        const left = instance.map.querySelector("me-main.lhs");
+        const right = instance.map.querySelector("me-main.rhs");
+        // Mind Elixir balances root children from DOM counts. Brief hidden placeholders make its own
+        // add operation choose the right side, so history and persistence record the correct direction.
+        const placeholders = Array.from({ length: Math.max(0, (right?.childElementCount ?? 0) - (left?.childElementCount ?? 0) + 1) }, () => {
+          const placeholder = document.createElement("me-wrapper");
+          placeholder.hidden = true; left?.appendChild(placeholder); return placeholder;
+        });
+        try { await nativeAddChild(destination, branch); }
+        finally { placeholders.forEach((placeholder) => placeholder.remove()); }
+        branch.direction = DEFAULT_MAIN_BRANCH_DIRECTION;
+        const created = instance.findEle(branch.id);
+        instance.selectNode(created, true);
+        await instance.beginEdit(created);
+      };
+      instance.bus.addListener("operation", scheduleSave);
       instance.bus.addListener("scale", (value: number) => setScalePercent(Math.round(value * 100)));
       mind.current = instance;
       const pan = { active: false, pointerId: -1, x: 0, y: 0 };
+      const branchDrag = { id: "", pointerId: -1, startX: 0, startY: 0, moved: false };
       const pointerDown = (event: PointerEvent) => {
         const target = event.target instanceof Element ? event.target : null;
+        const topic = target?.closest("me-tpc") as Topic | null;
+        if (event.button === 0 && topic?.nodeObj.parent && !topic.nodeObj.parent.parent) {
+          branchDrag.id = topic.nodeObj.id; branchDrag.pointerId = event.pointerId;
+          branchDrag.startX = event.clientX; branchDrag.startY = event.clientY; branchDrag.moved = false;
+        }
         if (event.button !== 0 || event.pointerType !== "mouse" || target?.closest("me-tpc, me-epd, .svg-label, .circle, #input-box, .context-menu")) return;
         event.preventDefault(); event.stopImmediatePropagation(); setCanvasMenu(undefined);
         pan.active = true; pan.pointerId = event.pointerId; pan.x = event.clientX; pan.y = event.clientY;
         instance.container.classList.add("blinko-panning"); instance.container.setPointerCapture(event.pointerId);
       };
       const pointerMove = (event: PointerEvent) => {
+        if (branchDrag.id && event.pointerId === branchDrag.pointerId) {
+          const distance = Math.hypot(event.clientX - branchDrag.startX, event.clientY - branchDrag.startY);
+          if (distance > 6) {
+            branchDrag.moved = true;
+            const root = instance.findEle(instance.nodeData.id).getBoundingClientRect();
+            setBranchDropSide(mainBranchDirectionForDrop(event.clientX, root.left + root.width / 2) === MindElixir.LEFT ? "left" : "right");
+          }
+        }
         if (!pan.active || event.pointerId !== pan.pointerId) return;
         event.preventDefault(); event.stopImmediatePropagation();
         instance.move(event.clientX - pan.x, event.clientY - pan.y);
         pan.x = event.clientX; pan.y = event.clientY;
       };
       const pointerEnd = (event: PointerEvent) => {
+        if (branchDrag.id && event.pointerId === branchDrag.pointerId) {
+          const branchId = branchDrag.id;
+          const shouldMove = branchDrag.moved && event.type === "pointerup";
+          const pointerX = event.clientX;
+          branchDrag.id = ""; branchDrag.pointerId = -1; branchDrag.moved = false; setBranchDropSide(undefined);
+          if (shouldMove) window.setTimeout(() => {
+            const topic = instance.findEle(branchId);
+            if (!topic?.nodeObj.parent || topic.nodeObj.parent.parent) return;
+            const root = instance.findEle(instance.nodeData.id).getBoundingClientRect();
+            const direction = mainBranchDirectionForDrop(pointerX, root.left + root.width / 2);
+            const nextData = instance.getData();
+            if (!setMainBranchDirection(nextData, branchId, direction)) return;
+            void instance.reshapeNode(topic, { direction }).then(() => {
+              if (mind.current !== instance) return;
+              instance.refresh(instance.getData());
+              instance.selectNode(instance.findEle(branchId));
+            });
+          }, 0);
+        }
         if (!pan.active || event.pointerId !== pan.pointerId) return;
         event.preventDefault(); event.stopImmediatePropagation(); pan.active = false;
         instance.container.classList.remove("blinko-panning");
@@ -469,7 +530,7 @@ function App() {
       </header>
       {saveState === "conflict" && <div className="conflict-banner" role="alert"><span>{t("conflict")}</span><button onClick={()=>void load()}><Icon name="reload" size={15}/>{t("reload")}</button><button onClick={()=>void saveAsCopy()}><Icon name="copy" size={15}/>{t("saveCopy")}</button></div>}
       <div className="canvas-wrap">
-        {current ? <><div ref={mapElement} className="mind-map-canvas"/><div className="zoom-controls"><button title={interactionText("zoomOut")} aria-label={interactionText("zoomOut")} onClick={()=>zoomBy(-.1)}><Icon name="minus" size={15}/></button><button className="zoom-value" title={interactionText("resetZoom")} aria-label={interactionText("resetZoom")} onClick={()=>{mind.current?.scale(1);mind.current?.toCenter();}}>{scalePercent}%</button><button title={interactionText("zoomIn")} aria-label={interactionText("zoomIn")} onClick={()=>zoomBy(.1)}><Icon name="plus" size={15}/></button></div><div className="canvas-hints"><button onClick={()=>{const instance=mind.current;if(!instance)return;void instance.addChild(instance.currentNode??instance.findEle(instance.nodeData.id));}}><Icon name="plus" size={14}/>{t("addChild")}</button><button onClick={()=>openAi("expand")}><Icon name="sparkles" size={14}/>{t("aiExpand")}</button><span>{interactionText("keyboardHint")}</span></div></> : !loading && <div className="empty-state"><span className="empty-art"><Icon name="network" size={34}/></span><h1>{t("emptyTitle")}</h1><p>{t("emptyBody")}</p><button className="new-button empty-create" onClick={()=>void createMap()}><Icon name="plus"/>{t("create")}</button></div>}
+        {current ? <><div ref={mapElement} className="mind-map-canvas"/>{branchDropSide&&<div className={`branch-drop-indicator ${branchDropSide}`} role="status">{interactionText(branchDropSide==="left"?"moveBranchLeft":"moveBranchRight")}</div>}<div className="zoom-controls"><button title={interactionText("zoomOut")} aria-label={interactionText("zoomOut")} onClick={()=>zoomBy(-.1)}><Icon name="minus" size={15}/></button><button className="zoom-value" title={interactionText("resetZoom")} aria-label={interactionText("resetZoom")} onClick={()=>{mind.current?.scale(1);mind.current?.toCenter();}}>{scalePercent}%</button><button title={interactionText("zoomIn")} aria-label={interactionText("zoomIn")} onClick={()=>zoomBy(.1)}><Icon name="plus" size={15}/></button></div><div className="canvas-hints"><button onClick={()=>{const instance=mind.current;if(!instance)return;void instance.addChild(instance.currentNode??instance.findEle(instance.nodeData.id));}}><Icon name="plus" size={14}/>{t("addChild")}</button><button onClick={()=>openAi("expand")}><Icon name="sparkles" size={14}/>{t("aiExpand")}</button><span>{interactionText("keyboardHint")}</span></div></> : !loading && <div className="empty-state"><span className="empty-art"><Icon name="network" size={34}/></span><h1>{t("emptyTitle")}</h1><p>{t("emptyBody")}</p><button className="new-button empty-create" onClick={()=>void createMap()}><Icon name="plus"/>{t("create")}</button></div>}
       </div>
     </section>
     {canvasMenu && <div className="context-backdrop" onPointerDown={()=>setCanvasMenu(undefined)}><div className="canvas-context-menu" role="menu" aria-label={interactionText("newBranch")} style={{ left: canvasMenu.x, top: canvasMenu.y }} onPointerDown={event=>event.stopPropagation()}><button role="menuitem" onClick={()=>void addFromCanvas()}><Icon name="network" size={17}/><span>{interactionText("newBranch")}</span><kbd>Enter</kbd></button>{canvasMenu.selectedNodeId&&<button role="menuitem" onClick={()=>void addFromCanvas(canvasMenu.selectedNodeId)}><Icon name="plus" size={17}/><span>{interactionText("newChild")}</span><kbd>Tab</kbd></button>}<p>{interactionText("canvasMenuHint")}</p></div></div>}
