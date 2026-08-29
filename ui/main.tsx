@@ -46,6 +46,7 @@ const COPY: Record<string, Copy> = {
 };
 
 const presentation = customViewPresentation();
+const launchEntityId = document.documentElement.dataset.blinkoEntityId || undefined;
 const locale = presentation.locale.toLowerCase().startsWith("zh")
   ? (/-(tw|hk|mo)|hant/.test(presentation.locale.toLowerCase()) ? "zh-TW" : "zh-CN") : "en";
 const t = (key: string, values: Record<string, string | number> = {}) =>
@@ -174,7 +175,10 @@ function App() {
         cursor = result.nextCursor;
       }
       setRecords(items); recordsRef.current = items;
-      setActiveId((selected) => selected && items.some((item) => item.id === selected) ? selected : items[0]?.id);
+      setActiveId((selected) => {
+        if (launchEntityId && items.some((item) => item.id === launchEntityId)) return launchEntityId;
+        return selected && items.some((item) => item.id === selected) ? selected : items[0]?.id;
+      });
     } catch { setLoadError(true); }
     finally { setLoading(false); }
   };
