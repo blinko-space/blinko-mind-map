@@ -512,7 +512,7 @@ function App() {
 
   return <main className="app-shell">
     <aside className={`map-list${mobileList ? " mobile-open" : ""}`} aria-label={t("title")}>
-      <div className="list-brand"><span className="brand-mark"><Icon name="network" size={19}/></span><strong>{t("title")}</strong><button className="mobile-close icon-button" aria-label={t("cancel")} onClick={()=>setMobileList(false)}><Icon name="close"/></button></div>
+      <button className="mobile-close icon-button" aria-label={t("cancel")} onClick={()=>setMobileList(false)}><Icon name="close"/></button>
       <button className="new-button" onClick={()=>void createMap()}><Icon name="plus"/><span>{t("newMap")}</span></button>
       <label className="search-field"><Icon name="search" size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder={t("search")} aria-label={t("search")}/></label>
       <div className="map-rows">

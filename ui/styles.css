@@ -51,7 +51,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .app-shell { display: flex; width: 100%; height: 100%; min-width: 0; background: var(--mm-background); }
 .map-list {
   display: flex; flex: 0 0 252px; flex-direction: column; min-width: 0;
-  padding: 14px 12px; background: var(--mm-surface); border-right: 1px solid var(--mm-border);
+  padding: 14px 12px; background: var(--mm-background); border-right: 1px solid var(--mm-border);
 }
 .list-brand { display: flex; align-items: center; gap: 9px; min-height: 34px; padding: 0 4px 10px; }
 .list-brand strong { min-width: 0; overflow: hidden; font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
@@ -90,7 +90,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .workspace { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; }
 .workspace-bar {
   display: flex; align-items: center; flex: 0 0 54px; gap: 8px; min-width: 0; padding: 8px 12px;
-  background: color-mix(in srgb, var(--mm-background) 94%, transparent); border-bottom: 1px solid var(--mm-border);
+  background: var(--mm-background); border-bottom: 1px solid var(--mm-border);
 }
 .title-input { min-width: 70px; max-width: 360px; flex: 1; padding: 6px 8px; background: transparent; border: 1px solid transparent; border-radius: 9px; font-size: 15px; font-weight: 650; }
 .title-input:hover { background: var(--mm-surface); }
