@@ -6,10 +6,10 @@ import { parseExtensionManifest } from "@blinko-cloud/cli/sdk";
 import { createMindMap, flattenNodeText, outlineToMindMap, parseAiOutline, parseMindMap, serializeMindMap } from "../ui/model";
 
 const root = resolve(import.meta.dirname, "..");
-const blinko = resolve(root, "node_modules/.bin/blinko");
+const blinko = resolve(root, "../../packages/cli/dist/blinko.mjs");
 
 function runCli(command: "validate" | "build") {
-  return execFileSync(blinko, ["extension", command, "."], { cwd: root, encoding: "utf8" });
+  return execFileSync(process.execPath, [blinko, "extension", command, "."], { cwd: root, encoding: "utf8" });
 }
 
 describe("Blinko Mind Map App", () => {
@@ -18,7 +18,7 @@ describe("Blinko Mind Map App", () => {
     expect(manifest).toMatchObject({
       appId: "cloud.blinko.mind-map",
       permissions: {
-        required: ["data:own:read", "data:own:write", "search:index:lexical"],
+        required: ["data:own:read", "data:own:write", "search:index:lexical", "state:own:read", "state:own:write"],
         optional: ["ai:generate"],
       },
       dataTypes: [expect.objectContaining({
@@ -63,7 +63,23 @@ describe("Blinko Mind Map App", () => {
     expect(html).toContain("Blinko Mind Map");
     expect(html).toContain("mind-map.document");
     expect(html).toContain("blinkoCustomUi");
-    expect(readFileSync(resolve(root, "ui/main.tsx"), "utf8")).toContain("host.ai.generate");
+    expect(html).not.toContain("process.env.NODE_ENV");
+    const main = readFileSync(resolve(root, "ui/main.tsx"), "utf8");
+    const styles = readFileSync(resolve(root, "ui/styles.css"), "utf8");
+    expect(main).toContain("host.ai.generate");
+    expect(main).toContain("overflowHidden: false");
+    expect(main).toContain("mouseSelectionButton: 2");
+    expect(main).toContain("handleWheel:");
+    expect(main).toContain("mind-map.guide-v1");
+    expect(main).toContain("renameMapTitle");
+    expect(main).toContain('addEventListener("contextmenu", contextMenu, true)');
+    expect(main).toContain("copyNode");
+    expect(main).toContain('addEventListener("pointermove", pointerMove, true)');
+    expect(main).toContain("newTopicName:");
+    expect(styles).toContain("radial-gradient");
+    expect(styles).toContain(".zoom-controls");
+    expect(styles).toContain(".canvas-context-menu");
+    expect(styles).toContain(".context-menu .menu-list");
     const shell = html.replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1</script>");
     expect(shell).not.toMatch(/<script\b[^>]*\bsrc\s*=/i);
     expect(shell).not.toMatch(/<link\b[^>]*\brel=["']?stylesheet/i);

@@ -41,7 +41,7 @@
     "supported": ["en", "zh-CN", "zh-TW"]
   },
   "permissions": {
-    "required": ["data:own:read", "data:own:write", "search:index:lexical"],
+    "required": ["data:own:read", "data:own:write", "state:own:read", "state:own:write", "search:index:lexical"],
     "optional": ["ai:generate"]
   },
   "network": { "domains": [] },

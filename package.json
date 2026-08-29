@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "blinko extension dev .",
-    "validate": "blinko extension validate .",
-    "build": "blinko extension build .",
-    "pack": "blinko extension pack .",
+    "validate": "node ../../packages/cli/dist/blinko.mjs extension validate .",
+    "build": "node ../../packages/cli/dist/blinko.mjs extension build .",
+    "pack": "node ../../packages/cli/dist/blinko.mjs extension pack .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
