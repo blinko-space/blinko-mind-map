@@ -1,0 +1,6 @@
+{
+  "app.name": "Blinko 導圖",
+  "app.summary": "把想法整理成清晰、可搜尋的心智圖。",
+  "app.description": "在 Blinko 中建立心智圖，將每張導圖儲存到帳號後端，透過 Blinko 搜尋尋找節點文字，並使用已設定的 AI 起草導圖或擴展分支。",
+  "mind-map.open": "Blinko 導圖"
+}

@@ -1,0 +1,6 @@
+{
+  "app.name": "Blinko Mind Map",
+  "app.summary": "Turn ideas into clear, searchable mind maps.",
+  "app.description": "Create visual mind maps in Blinko, keep every map in your account, find node text through Blinko search, and use your configured AI provider to draft or expand branches.",
+  "mind-map.open": "Blinko Mind Map"
+}

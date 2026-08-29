@@ -1,0 +1,6 @@
+{
+  "app.name": "Blinko 导图",
+  "app.summary": "把想法整理成清晰、可搜索的思维导图。",
+  "app.description": "在 Blinko 中创建思维导图，将每张导图保存到账号后端，通过 Blinko 搜索查找节点文字，并使用已配置的 AI 起草导图或扩展分支。",
+  "mind-map.open": "Blinko 导图"
+}
