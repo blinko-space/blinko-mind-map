@@ -1,6 +1,6 @@
 {
   "appId": "cloud.blinko.mind-map",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minRuntimeApi": "1.0.0",
   "source": {
     "repository": "https://github.com/blinko-space/blinko-mind-map",
@@ -16,7 +16,7 @@
   "targets": {
     "web": {
       "entry": "src/index.ts",
-      "minHostVersion": "1.0.0",
+      "minHostVersion": "1.1.0",
       "minRuntimeApi": "1.0.0",
       "permissions": [],
       "optionalPermissions": []
