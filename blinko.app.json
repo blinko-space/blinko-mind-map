@@ -79,7 +79,7 @@
         "surface": "sidebar",
         "handler": "mind-map.workspace",
         "viewId": "mind-map.workspace",
-        "icon": "app",
+        "icon": "tabler:binary-tree",
         "titleKey": "mind-map.open",
         "group": "productivity",
         "order": 45
