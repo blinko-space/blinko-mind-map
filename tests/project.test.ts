@@ -16,10 +16,10 @@ import {
 } from "../ui/model";
 
 const root = resolve(import.meta.dirname, "..");
-const blinko = resolve(root, "../../packages/cli/dist/blinko.mjs");
+const blinko = resolve(root, "node_modules/.bin/blinko");
 
 function runCli(command: "validate" | "build") {
-  return execFileSync(process.execPath, [blinko, "extension", command, "."], { cwd: root, encoding: "utf8" });
+  return execFileSync(blinko, ["extension", command, "."], { cwd: root, encoding: "utf8" });
 }
 
 describe("Blinko Mind Map App", () => {
