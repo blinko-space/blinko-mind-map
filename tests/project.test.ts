@@ -27,6 +27,7 @@ describe("Blinko Mind Map App", () => {
     const manifest = parseExtensionManifest(JSON.parse(readFileSync(resolve(root, "blinko.app.json"), "utf8")));
     expect(manifest).toMatchObject({
       appId: "cloud.blinko.mind-map",
+      version: "0.1.4",
       permissions: {
         required: ["data:own:read", "data:own:write", "search:index:lexical", "state:own:read", "state:own:write"],
         optional: ["ai:generate"],
@@ -90,6 +91,8 @@ describe("Blinko Mind Map App", () => {
     const main = readFileSync(resolve(root, "ui/main.tsx"), "utf8");
     const styles = readFileSync(resolve(root, "ui/styles.css"), "utf8");
     expect(main).toContain("host.ai.generate");
+    expect(main).toContain('host.ai.availability("chat")');
+    expect(main).toContain("aiAvailable&&");
     expect(main).toContain("overflowHidden: false");
     expect(main).toContain("mouseSelectionButton: 2");
     expect(main).toContain("handleWheel:");
