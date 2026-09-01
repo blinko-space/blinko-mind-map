@@ -27,7 +27,7 @@ describe("Blinko Mind Map App", () => {
     const manifest = parseExtensionManifest(JSON.parse(readFileSync(resolve(root, "blinko.app.json"), "utf8")));
     expect(manifest).toMatchObject({
       appId: "cloud.blinko.mind-map",
-      version: "0.1.5",
+      version: "0.1.6",
       permissions: {
         required: ["data:own:read", "data:own:write", "search:index:lexical", "state:own:read", "state:own:write"],
         optional: ["ai:generate"],
@@ -93,9 +93,9 @@ describe("Blinko Mind Map App", () => {
     expect(main).toContain("host.ai.generate");
     expect(main).toContain('host.ai.availability("chat")');
     expect(main).toContain("aiAvailable&&");
-    expect(main).toContain('role="progressbar"');
-    expect(main).toContain("aiElapsedSeconds");
-    expect(main).toContain("aiProgressLong");
+    expect(main).toContain("host.ai.generateStream");
+    expect(main).toContain("aiStreamText");
+    expect(main).toContain("ai-stream-line");
     expect(main).toContain("overflowHidden: false");
     expect(main).toContain("mouseSelectionButton: 2");
     expect(main).toContain("handleWheel:");
@@ -112,8 +112,8 @@ describe("Blinko Mind Map App", () => {
     expect(styles).toContain("radial-gradient");
     expect(styles).toContain(".zoom-controls");
     expect(styles).toContain(".canvas-context-menu");
-    expect(styles).toContain(".ai-progress-track");
-    expect(styles).toContain("@keyframes ai-progress-slide");
+    expect(styles).toContain(".ai-stream-output");
+    expect(styles).toContain(".ai-stream-line");
     expect(styles).toContain(".context-menu .menu-list");
     const shell = html.replace(/(<script\b[^>]*>)[\s\S]*?<\/script>/gi, "$1</script>");
     expect(shell).not.toMatch(/<script\b[^>]*\bsrc\s*=/i);
